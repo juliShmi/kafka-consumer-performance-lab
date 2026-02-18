@@ -1,1 +1,5 @@
 /Users/juli_shmi/MyProjects/kafka-consumer-performance-lab/src/main/java/com/example/kafka_performance_lab/KafkaPerformanceLabApplication.java
+/Users/juli_shmi/MyProjects/kafka-consumer-performance-lab/src/main/java/com/example/kafka_performance_lab/controller/OrdersProducerController.java
+/Users/juli_shmi/MyProjects/kafka-consumer-performance-lab/src/main/java/com/example/kafka_performance_lab/kafka/KafkaConsumer.java
+/Users/juli_shmi/MyProjects/kafka-consumer-performance-lab/src/main/java/com/example/kafka_performance_lab/kafka/KafkaProducer.java
+/Users/juli_shmi/MyProjects/kafka-consumer-performance-lab/src/main/java/com/example/kafka_performance_lab/kafka/config/KafkaConfig.java
