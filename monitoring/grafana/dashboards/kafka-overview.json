@@ -1,0 +1,182 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "How many messages per second are produced into the topic (estimated via current offset rate).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (topic) (rate(kafka_topic_partition_current_offset{topic=~\"$topic\"}[1m]))",
+          "legendFormat": "{{topic}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Messages in / sec (by topic)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Consumer group lag (sum across partitions).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (consumergroup, topic) (kafka_consumergroup_lag{consumergroup=~\"$consumergroup\", topic=~\"$topic\"})",
+          "legendFormat": "{{consumergroup}} / {{topic}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Consumer lag (by group/topic)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [
+    "kafka",
+    "prometheus"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "order-create",
+          "value": "order-create"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "Prometheus"
+        },
+        "definition": "label_values(kafka_topic_partition_current_offset, topic)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Topic",
+        "multi": false,
+        "name": "topic",
+        "options": [],
+        "query": {
+          "query": "label_values(kafka_topic_partition_current_offset, topic)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "orders-group",
+          "value": "orders-group"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "Prometheus"
+        },
+        "definition": "label_values(kafka_consumergroup_lag, consumergroup)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Consumer group",
+        "multi": false,
+        "name": "consumergroup",
+        "options": [],
+        "query": {
+          "query": "label_values(kafka_consumergroup_lag, consumergroup)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Kafka Overview (kafka-exporter)",
+  "uid": "kafka-overview",
+  "version": 1,
+  "weekStart": ""
+}
