@@ -105,6 +105,160 @@
       ],
       "title": "Consumer lag (by group/topic)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Consumer lag per partition (one series per partition).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "kafka_consumergroup_lag{consumergroup=~\"$consumergroup\", topic=~\"$topic\"}",
+          "legendFormat": "p{{partition}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Consumer lag per partition",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "Consumer processing latency percentiles from app histogram.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "1000 * histogram_quantile(0.95, sum by (le) (rate(kafka_consumer_processing_seconds_bucket[5m])))",
+          "legendFormat": "p95",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "1000 * histogram_quantile(0.99, sum by (le) (rate(kafka_consumer_processing_seconds_bucket[5m])))",
+          "legendFormat": "p99",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "1000 * histogram_quantile(0.999, sum by (le) (rate(kafka_consumer_processing_seconds_bucket[5m])))",
+          "legendFormat": "p99.9",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Consumer processing latency (p95/p99/p99.9)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "description": "End-to-end latency (producer header timestamp -> consumer time) percentiles from app histogram.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "1000 * histogram_quantile(0.95, sum by (le) (rate(kafka_consumer_end_to_end_seconds_bucket[5m])))",
+          "legendFormat": "p95",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "1000 * histogram_quantile(0.99, sum by (le) (rate(kafka_consumer_end_to_end_seconds_bucket[5m])))",
+          "legendFormat": "p99",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "1000 * histogram_quantile(0.999, sum by (le) (rate(kafka_consumer_end_to_end_seconds_bucket[5m])))",
+          "legendFormat": "p99.9",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "End-to-end latency (p95/p99/p99.9)",
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",

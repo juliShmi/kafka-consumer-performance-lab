@@ -16,6 +16,7 @@ public class KafkaConfig {
 
         var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
         factory.setConsumerFactory(consumerFactory);
+        factory.setConcurrency(3); //the same as kafka partitions
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
 
         return factory;
