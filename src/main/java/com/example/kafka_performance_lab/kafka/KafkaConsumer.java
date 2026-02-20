@@ -1,8 +1,8 @@
 package com.example.kafka_performance_lab.kafka;
 
-import lombok.extern.slf4j.Slf4j;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class KafkaConsumer {
 
     private static final String PRODUCED_AT_HEADER = "producedAtEpochMs";
+    private static final String POISON_PREFIX = "POISON:";
 
     private final Timer processingTimer;
     private final Timer endToEndTimer;
@@ -36,6 +37,10 @@ public class KafkaConsumer {
     public void listen(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) throws InterruptedException {
         var sample = Timer.start();
         try {
+            if (record.value() != null && record.value().startsWith(POISON_PREFIX)) {
+                throw new IllegalArgumentException("Poison pill message");
+            }
+
             var producedAt = record.headers().lastHeader(PRODUCED_AT_HEADER);
             if (producedAt != null && producedAt.value() != null && producedAt.value().length == Long.BYTES) {
                 long producedAtMs = ByteBuffer.wrap(producedAt.value()).getLong();
@@ -48,6 +53,18 @@ public class KafkaConsumer {
             acknowledgment.acknowledge();
         } finally {
             sample.stop(processingTimer);
+        }
+    }
+
+    @KafkaListener(topics = "order-create.DLT", groupId = "orders-group-dlt")
+    public void listenDlt(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) {
+        try {
+            log.warn("DLT message received. topic={}, partition={}, offset={}, value={}",
+                    record.topic(), record.partition(), record.offset(), record.value());
+            acknowledgment.acknowledge();
+        } catch (RuntimeException e) {
+            log.error("Failed to handle DLT message; leaving unacked for retry", e);
+            throw e;
         }
     }
 }
