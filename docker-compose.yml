@@ -66,7 +66,6 @@ services:
     ports:
       - "9090:9090"
     extra_hosts:
-      # Makes host.docker.internal resolvable even on setups where it's missing (Linux/Colima/etc.)
       - "host.docker.internal:host-gateway"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
