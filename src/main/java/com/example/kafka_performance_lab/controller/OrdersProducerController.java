@@ -24,9 +24,14 @@ public class OrdersProducerController {
     }
 
     @PostMapping("/generate")
-    public String generateOrders(@RequestParam(defaultValue = "10000") int count) {
+    public String generateOrders(
+            @RequestParam(defaultValue = "10000") int count,
+            @RequestParam(defaultValue = "100") int keySpace
+    ) {
         for (int i = 0; i < count; i++) {
-            var record = new ProducerRecord<String, String>(TOPIC, UUID.randomUUID().toString());
+            var key = "order-key-" + (Math.floorMod(i, Math.max(1, keySpace)));
+            var value = "OK:key=" + key + ";id=" + UUID.randomUUID();
+            var record = new ProducerRecord<>(TOPIC, key, value);
             record.headers().add(new RecordHeader(PRODUCED_AT_HEADER, ByteBuffer.allocate(Long.BYTES).putLong(System.currentTimeMillis()).array()));
             kafkaTemplate.send(record);
         }
@@ -40,19 +45,22 @@ public class OrdersProducerController {
             @RequestParam(defaultValue = "20") int irrelevantCount) {
 
         for (int i = 0; i < goodCount; i++) {
-            var record = new ProducerRecord<String, String>(TOPIC, "OK:" + UUID.randomUUID());
+            var key = "good-" + Math.floorMod(i, 10);
+            var record = new ProducerRecord<String, String>(TOPIC, key, "OK:" + UUID.randomUUID());
             record.headers().add(new RecordHeader(PRODUCED_AT_HEADER, ByteBuffer.allocate(Long.BYTES).putLong(System.currentTimeMillis()).array()));
             kafkaTemplate.send(record);
         }
 
         for (int i = 0; i < irrelevantCount; i++) {
-            var record = new ProducerRecord<String, String>(TOPIC, "event=" + IRRELEVANT_MARKER + ";id=" + UUID.randomUUID());
+            var key = "irrelevant-" + Math.floorMod(i, 10);
+            var record = new ProducerRecord<String, String>(TOPIC, key, "event=" + IRRELEVANT_MARKER + ";id=" + UUID.randomUUID());
             record.headers().add(new RecordHeader(PRODUCED_AT_HEADER, ByteBuffer.allocate(Long.BYTES).putLong(System.currentTimeMillis()).array()));
             kafkaTemplate.send(record);
         }
 
         for (int i = 0; i < poisonCount; i++) {
-            var record = new ProducerRecord<String, String>(TOPIC, POISON_PREFIX + UUID.randomUUID());
+            var key = "poison-" + Math.floorMod(i, 10);
+            var record = new ProducerRecord<String, String>(TOPIC, key, POISON_PREFIX + UUID.randomUUID());
             record.headers().add(new RecordHeader(PRODUCED_AT_HEADER, ByteBuffer.allocate(Long.BYTES).putLong(System.currentTimeMillis()).array()));
             kafkaTemplate.send(record);
         }

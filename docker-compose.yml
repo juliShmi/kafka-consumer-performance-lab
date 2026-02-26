@@ -9,6 +9,20 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
+  postgres:
+    image: postgres:16.6
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: kafka_lab
+      POSTGRES_USER: kafka_lab
+      POSTGRES_PASSWORD: kafka_lab
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kafka_lab -d kafka_lab"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   kafka:
     image: confluentinc/cp-kafka:7.6.1
     depends_on:

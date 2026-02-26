@@ -1,14 +1,41 @@
 spring:
   application:
     name: kafka-performance-lab
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:kafka_lab}
+    username: ${DB_USER:kafka_lab}
+    password: ${DB_PASSWORD:kafka_lab}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: orders-group
       auto-offset-reset: earliest
       enable-auto-commit: false
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 1
     listener:
       concurrency: 3
+
+app:
+  processing:
+    delay-ms: 100
+  outbox:
+    in-flight-timeout-ms: 60000
+    publish:
+      topic: order-create.processed
+      batch-size: 100
+      fixed-delay-ms: 250
 
 management:
   endpoints:

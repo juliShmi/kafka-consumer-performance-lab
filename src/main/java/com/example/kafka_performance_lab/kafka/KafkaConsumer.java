@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Counter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import com.example.kafka_performance_lab.service.OrderProcessingService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,9 @@ public class KafkaConsumer {
     private final Timer endToEndTimer;
     private final Counter relevantEventsCounter;
     private final Counter irrelevantEventsCounter;
+    private final OrderProcessingService orderProcessingService;
 
-    public KafkaConsumer(MeterRegistry meterRegistry) {
+    public KafkaConsumer(MeterRegistry meterRegistry, OrderProcessingService orderProcessingService) {
         this.processingTimer = Timer.builder("kafka_consumer_processing_seconds")
                 .description("Time spent processing a Kafka message inside the consumer")
                 .publishPercentileHistogram(true)
@@ -45,6 +47,8 @@ public class KafkaConsumer {
                 .description("Number of events received by consumer by relevance")
                 .tag("type", "irrelevant")
                 .register(meterRegistry);
+
+        this.orderProcessingService = orderProcessingService;
     }
 
     @KafkaListener(topics = "order-create")
@@ -70,8 +74,8 @@ public class KafkaConsumer {
                 endToEndTimer.record(e2eMs, TimeUnit.MILLISECONDS);
             }
 
-            Thread.sleep(100);
-            log.info("Processed {}", record.value());
+            orderProcessingService.processAndStageOutbox(record);
+            log.info("Processed relevant key={} value={}", record.key(), record.value());
             acknowledgment.acknowledge();
         } finally {
             sample.stop(processingTimer);
