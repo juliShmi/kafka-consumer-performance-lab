@@ -73,7 +73,7 @@ public class OrderProcessingService {
                     null
             ));
         } catch (DataIntegrityViolationException e) {
-            // Duplicate (topic,partition,offset) => already processed; safe to ack.
+            
         }
     }
 }
