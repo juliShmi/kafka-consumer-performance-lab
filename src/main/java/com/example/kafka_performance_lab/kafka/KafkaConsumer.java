@@ -2,10 +2,8 @@ package com.example.kafka_performance_lab.kafka;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.Counter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import com.example.kafka_performance_lab.service.OrderProcessingService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
@@ -19,15 +17,11 @@ public class KafkaConsumer {
 
     private static final String PRODUCED_AT_HEADER = "producedAtEpochMs";
     private static final String POISON_PREFIX = "POISON:";
-    private static final String IRRELEVANT_MARKER = "irrelevant";
 
     private final Timer processingTimer;
     private final Timer endToEndTimer;
-    private final Counter relevantEventsCounter;
-    private final Counter irrelevantEventsCounter;
-    private final OrderProcessingService orderProcessingService;
 
-    public KafkaConsumer(MeterRegistry meterRegistry, OrderProcessingService orderProcessingService) {
+    public KafkaConsumer(MeterRegistry meterRegistry) {
         this.processingTimer = Timer.builder("kafka_consumer_processing_seconds")
                 .description("Time spent processing a Kafka message inside the consumer")
                 .publishPercentileHistogram(true)
@@ -37,18 +31,6 @@ public class KafkaConsumer {
                 .description("End-to-end latency from producer timestamp header to consumer processing time")
                 .publishPercentileHistogram(true)
                 .register(meterRegistry);
-
-        this.relevantEventsCounter = Counter.builder("kafka_consumer_events_total")
-                .description("Number of events received by consumer by relevance")
-                .tag("type", "relevant")
-                .register(meterRegistry);
-
-        this.irrelevantEventsCounter = Counter.builder("kafka_consumer_events_total")
-                .description("Number of events received by consumer by relevance")
-                .tag("type", "irrelevant")
-                .register(meterRegistry);
-
-        this.orderProcessingService = orderProcessingService;
     }
 
     @KafkaListener(topics = "order-create")
@@ -59,14 +41,6 @@ public class KafkaConsumer {
                 throw new IllegalArgumentException("Poison pill message");
             }
 
-            if (record.value() != null && record.value().toLowerCase().contains(IRRELEVANT_MARKER)) {
-                irrelevantEventsCounter.increment();
-                acknowledgment.acknowledge();
-                return;
-            }
-
-            relevantEventsCounter.increment();
-
             var producedAt = record.headers().lastHeader(PRODUCED_AT_HEADER);
             if (producedAt != null && producedAt.value() != null && producedAt.value().length == Long.BYTES) {
                 long producedAtMs = ByteBuffer.wrap(producedAt.value()).getLong();
@@ -74,8 +48,8 @@ public class KafkaConsumer {
                 endToEndTimer.record(e2eMs, TimeUnit.MILLISECONDS);
             }
 
-            orderProcessingService.processAndStageOutbox(record);
-            log.info("Processed relevant key={} value={}", record.key(), record.value());
+            Thread.sleep(100);
+            log.info("Processed {}", record.value());
             acknowledgment.acknowledge();
         } finally {
             sample.stop(processingTimer);
